@@ -9,3 +9,4 @@
 *.mod.cmd
 *.symvers.cmd
 *.order.cmd
+*.mod.c
