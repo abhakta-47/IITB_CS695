@@ -46,6 +46,36 @@ Sample Message Log:
 2. initialize the ioctl device
 3. runs your user space application
 4. cleanly removes the ioctl device
+##  Task 2.2 
+### Sub Task 2.2.A
+Implement the following ioctl device driver which provides a call with the following specifications:
+1. Takes a pid as an argument and modifies the task structure of the current process to change its parent process with the given pid. More specifically, the process with the given pid should receive a SIGCHLD signal on exit of the current process (which makes the ioctl call).
+This IOCTL call/functionality is used by the foot soldier program to attach itself to the control station.
+2. A process use pid as an argument and terminates all child processes of the given pid. After all child processes get terminated, the process terminates/exits itself. This ioctl call is done on an emergency
+This second IOCTL call/functionality is used by the control station to initiate a reset condition to stop/terminate the foot soldier programs.
+### Sub Task 2.2.B
+The soldier and control station programs to invoke the ioctl calls, and a script that launches these programs are provided at this link. Modify the script at the mentioned places to compile, initiate, and remove the ioctl device.
+
+Sample Output:
+```bash
+cs695@cs695:~$ ./run_dr_bloom.sh
+Control station PID: 12148
+Soldier PID: 12149
+Soldier PID: 12150
+Soldier PID: 12151
+Soldier PID: 12152
+[CHILD]: soldier 12152 changing its parent
+[CHILD]: soldier 12151 changing its parent
+[CHILD]: soldier 12150 changing its parent
+[CHILD]: soldier 12149 changing its parent
+[PARENT]: Control station process 12148 started
+[PARENT]: Soldier process 12150 terminated
+[PARENT]: Soldier process 12149 terminated
+[PARENT]: Emergency Emergency!
+[PARENT]: Soldier process 12152 terminated
+[PARENT]: Soldier process 12151 terminated
+[PARENT]: Control station 12148 exiting                 
+```
 
 # ToDos
 - [ ] Task 1
@@ -54,5 +84,6 @@ Sample Message Log:
     - [ ] Task 1.3 : graph etc
     - [x] Task 1.4
     - [ ] Task 1.5 : test script
-- [ ] Task 2
+- [x] Task 2
     - [x] Task 2.1
+    - [x] Task 2.2

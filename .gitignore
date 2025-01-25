@@ -5,3 +5,5 @@
 *.mod.c
 *.order
 *.symvers
+control_station
+soldier
