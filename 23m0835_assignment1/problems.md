@@ -27,3 +27,32 @@ Sample Message Log:
 [115056.042726] [LKM5] THP Size: 0 KiB, THP count: 0
 [115139.727883] [LKM5] Module LKM5 Unloaded
 ```
+
+# Task 2: IOCTL
+## Task 2.1 Memory operations
+### IOCTL driver implementatin
+1. Provide the physical address for a given virtual address. The virtual to physical-address translation should be for the current running process.
+2. Given a list of physical addresses and corresponding byte values, write the specified byte value to each of the provided physical memory addresses. The physical address and the value to be written as parameters of the ioctl call.
+### User Space program
+1. Allocates a memory address block of size count  bytes on the heap
+2. Assign the value “104” to the first byte of the allocated memory address
+3. Assign a value, Incremented by 1, for each consecutive memory address until the entire block is filled.
+4. Print the addresses (virtual addresses) of the allocated memory and their corresponding values.  
+5. Make an ioctl call to get the physical addresses of the allocated memory. Print the physical addresses.
+6. Implement another ioctl call to update the value at the first memory address to 53 and increment the values at subsequent addresses by 1, using their respective physical memory addresses
+7. Verify the modified values by printing the content of the allocated memory block.
+### spock.sh script
+1. compiles your ioctl driver and user space application
+2. initialize the ioctl device
+3. runs your user space application
+4. cleanly removes the ioctl device
+
+# ToDos
+- [ ] Task 1
+    - [x] Task 1.1
+    - [x] Task 1.2
+    - [ ] Task 1.3 : graph etc
+    - [x] Task 1.4
+    - [ ] Task 1.5 : test script
+- [ ] Task 2
+    - [x] Task 2.1
