@@ -76,6 +76,15 @@ Soldier PID: 12152
 [PARENT]: Soldier process 12151 terminated
 [PARENT]: Control station 12148 exiting                 
 ```
+# Task 3: procfs and sysfs
+## Task 3.1
+Develop a kernel module named get_pgfaults.c with the objective of introducing a fresh entry into the /proc filesystem, specifically labeled /proc/get_pgfaults. Users should be able to use commands like cat to retrieve and display information regarding the total count of page faults the operating system has encountered since it booted.
+## Task 3.2 
+Write a kernel module get_memstats.c that creates a /sys/kernel/mem_stats directory to expose memory statistics similar to Task 1.4. The directory should have the following four files:
+1. pid: The pid of the process for which the memory statistics should be shown. The file should have both read and write and access and contain a default value of -1.
+2. virtmem: The current virtual memory size of the process represented by the pid. This file should only have read access and, by default, should show the values in Bytes.
+3. physmem: The current physical memory of the process represented by the pid. Similar to virtmem the file should also be read-only, and by default should show the values in Bytes.
+4. unit: Unit of memory that should be shown in the virtmem and physmem files. This file is both readable and writable. The file can take three inputs “B” representing Bytes, “K” representing KB, and “M” representing MB. On kernel module loading by default the file should contain “B” and should be changeable at runtime. All other values should be discarded appropriately.
 
 # ToDos
 - [ ] Task 1
@@ -84,6 +93,9 @@ Soldier PID: 12152
     - [ ] Task 1.3 : graph etc
     - [x] Task 1.4
     - [ ] Task 1.5 : test script
-- [x] Task 2
+- [.] Task 2
     - [x] Task 2.1
-    - [x] Task 2.2
+    - [.] Task 2.2
+- [.] Tasl 3
+    - [ ] Task 3.1
+    - [x] Task 3.2
