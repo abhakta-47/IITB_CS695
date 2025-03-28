@@ -28,28 +28,32 @@ echo_green "insmod successfull !!"
 ###############################################
 
 # Launching the control station
-./control_station 13 &
+./control_station 15 &
 c_pid=$!
 echo "Control station PID: $c_pid"
 
-sleep 3;
+sleep 5;
 
 # Launching the soldiers
-./soldier $c_pid 1 &
+./soldier $c_pid 0 &
 s_pid1=$!
 echo "Soldier PID (exits): $s_pid1"
+sleep 1;
 
 ./soldier $c_pid 1  &
 s_pid2=$!
 echo "Soldier PID (hangs): $s_pid2"
+sleep 1;
 
 ./soldier $c_pid 1  &
 s_pid3=$!
 echo "Soldier PID (hangs): $s_pid3"
+sleep 1;
 
-./soldier $c_pid 1  &
+./soldier $c_pid 0  &
 s_pid4=$!
 echo "Soldier PID (exits): $s_pid4"
+sleep 1;
 
 wait $c_pid
 

@@ -57,13 +57,14 @@ int main(int argc, char **argv) {
         close_driver("/dev/driver2", fd_driver);
         exit(EXIT_FAILURE);
     }
-    printf("[CHILD:%d] changed New parent:%d\n", child_pid, getppid());
 
     close_driver("/dev/driver2", fd_driver);
     if (hang) {
         printf("[CHILD:%d] waiting\n", child_pid);
         sleep(100);
+        return EXIT_SUCCESS;
     }
+    sleep(5);
     printf("[CHILD:%d] exiting\n", child_pid);
     return EXIT_SUCCESS;
 }

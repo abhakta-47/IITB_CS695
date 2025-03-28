@@ -17,19 +17,9 @@
 
 void sigchld_handler(int sig) {
     int status;
-    pid_t soldier_pid, last_pid;
+    pid_t soldier_pid;
     while ((soldier_pid = waitpid(-1, &status, WNOHANG)) > 0) {
-        if (last_pid == soldier_pid)
-            break;
-        last_pid = soldier_pid;
-        if (WIFEXITED(status)) {
-            printf(
-                "[Parent]: Soldier process %d terminated with exit status %d\n",
-                soldier_pid, WEXITSTATUS(status));
-        } else if (WIFSIGNALED(status)) {
-            printf("[Parent]: Soldier process %d killed by signal %d\n",
-                   soldier_pid, WTERMSIG(status));
-        }
+        printf("[Parent]: Soldier process %d terminated\n", soldier_pid);
         fflush(stdout);
     }
     if (soldier_pid == -1 && errno != ECHILD) {
@@ -72,7 +62,7 @@ int main(int argc, char **argv) {
     int s_d = atoi(argv[1]);
 
     struct sigaction sa;
-    sa.sa_handler = sigchld_handler;
+    // sa.sa_handler = sigchld_handler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART | SA_NOCLDSTOP;
     if (sigaction(SIGCHLD, &sa, NULL) == -1) {

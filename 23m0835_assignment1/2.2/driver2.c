@@ -73,12 +73,16 @@ static long driver2_ioctl(struct file *file, unsigned int cmd,
         }
 
         task_lock(current_task);
+        // write_lock(&tasklist_lock);
         list_del_rcu(&current_task->sibling);
         rcu_assign_pointer(current_task->parent, new_parent_task);
         list_add_rcu(&current_task->sibling, &new_parent_task->children);
+        // write_unlock(&tasklist_lock);
         task_unlock(current_task);
 
         printk(KERN_INFO "[DRIVER2.2] Parent changed\n");
+        set_current_state(current_task);
+        printk(KERN_INFO "[DRIVER2.2] Kernel notified\n");
 
         break;
 

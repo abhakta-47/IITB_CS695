@@ -5,7 +5,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#define SIZE (512 * 1024 * 1024) // 512 MB
+#define SIZE (1024 * 1024 * 1024) // 512 MB
 
 void enable_thp(int enable) {
     int fd = open("/sys/kernel/mm/transparent_hugepage/enabled", O_WRONLY);

@@ -95,7 +95,7 @@ Write a kernel module get_memstats.c that creates a /sys/kernel/mem_stats direct
     - [ ] Task 1.5 : test script
 - [.] Task 2
     - [x] Task 2.1
-    - [.] Task 2.2
+    - [.] Task 2.2 : fix child exit
 - [.] Tasl 3
     - [ ] Task 3.1
     - [x] Task 3.2
