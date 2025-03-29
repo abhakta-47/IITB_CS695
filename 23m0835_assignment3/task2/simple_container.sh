@@ -11,11 +11,14 @@ gcc -o container_prog container_prog.c
 cp container_prog $SIMPLE_CONTAINER_ROOT/
 
 # 1.1: Copy any required libraries to execute container_prog to the new root container filesystem 
-
+ldd container_prog | grep -oE "/[^ ]+" | while read lib; do
+    mkdir -p "$SIMPLE_CONTAINER_ROOT/$(dirname $lib)"
+    cp "$lib" "$SIMPLE_CONTAINER_ROOT/$lib"
+done
 
 echo -e "\n\e[1;32mOutput Subtask 2a\e[0m"
 # 1.2: Execute container_prog in the new root filesystem using chroot. You should pass "subtask1" as an argument to container_prog
-
+sudo chroot "$(pwd)/$SIMPLE_CONTAINER_ROOT" /container_prog subtask1
 
 
 echo "__________________________________________"
