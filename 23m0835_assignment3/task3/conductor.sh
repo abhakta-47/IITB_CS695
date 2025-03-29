@@ -435,7 +435,8 @@ exec() {
     # The executed process should be within correct namespace and root
     # directory as of the container and tools like ps, top should show only processes
     # running within the container
-
+    local ROOTFS_PATH="$(pwd)/$CONTAINERDIR/$NAME/rootfs"
+    nsenter --target=$CONTAINER_INIT_PID --all -- chroot "$ROOTFS_PATH" $EXEC_CMD_ARGS
 
 }
 
