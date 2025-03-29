@@ -9,7 +9,7 @@ The following are the logical actions –
     Create a new child process in a new UTS and PID namespace
     Create a second child process and attach it to the UTS and PID namespace of the first child process
 
-Note: System calls of interest are clone, setns, and unshare.
+**Note:** System calls of interest are clone, setns, and unshare.
 
 For the PID namespace, the namespace is determined during creation and cannot be changed. To create a new process with a new PID namespace, you need a flag that can be used with the clone system call. To create a new child process and attach it to an existing namespace, the parent process has to associate the flag with an existing process namespace. The clone system call does not have a flag to create and attach a new child process to an existing namespace.
 Make changes to/via the parent process such that child2 is created in the same PID namespace as child1.
@@ -77,7 +77,7 @@ Read comments and fill in commands at marked portions in simple-container.sh scr
 ### Subtask 2c: Resource provisioning
 The third requirement of the container setup is resource-provisioning. A container should not be able to hog unrestricted resources of the system. cgroup allows fine granularity control of different resources for each process group. In this subtask, create a new cgroup that restricts the maximum CPU utilization to 50%. This cgroup should be assigned to all processes running within the container.
 
-Note:
+**Note:**
 
     CPU utilization within a cgroup is specified in terms of quota and period. Quota is the maximum total time on CPU cores the cgroup gets in the specified period of time. The quota can be greater than the period on a multicore system. You can refer to this article for more details. In this subtask, you are required to set the utilization limit to 50% of single core and not 50% utilization limit of all cores.
     There are significant changes between cgroup v1 and cgroup v2. You will be working with cgroup v2 in this assignment.
@@ -142,63 +142,61 @@ Value (Ignore): 107375219085276240
 
 In this task, we will develop a more complete container management tool like Docker. The tool will provide the following features:
 
-    Ability to create full fledged debian/ubuntu container images
-    Instantiating new containers from an image
-    Enabling the following network capabilities for the containers
+- Ability to create full fledged debian/ubuntu container images
+- Instantiating new containers from an image
+- Enabling the following network capabilities for the containers
+    - Network path between container and host
+    - Network path between container and public
+    - TCP Port forwarding between host and container
+    - Network path between different containers on the host
+- Dockerfile-like interface to setup image with layers and overlayfs
 
-    Network path between container and host
-    Network path between container and public
-    TCP Port forwarding between host and container
-    Network path between different containers on the host
+There are two script files for this task `setup.sh` and `conductor.sh`
+- `setup.sh` is used to set configuration parameters for our tool
+- `conductor.sh` script is the actual tool that will perform all operations
 
-    Dockerfile-like interface to setup image with layers and overlayfs
-
-There are two script files for this task setup.sh and conductor.sh
-
-    setup.sh is used to set configuration parameters for our tool
-    conductor.sh script is the actual tool that will perform all operations
-
-Important: Within the setup.sh script set the DEFAULT_IFC variable to the name of the network interface connecting your VM/Machine to the external network. Without this step, you cannot access the external network from your containers. You can use ip a command to list all network interfaces.
+**Important:** Within the setup.sh script set the `DEFAULT_IFC` variable to the name of the network interface connecting your VM/Machine to the external network. Without this step, you cannot access the external network from your containers. You can use ip a command to list all network interfaces.
 
 Functions provided by the tool are documented as follows:
 
-sudo ./conductor.sh -h can also be used to list out the functions of the tool
+`sudo ./conductor.sh -h` can also be used to list out the functions of the tool
 
-build
+### build
 
-Usage: ./conductor.sh build <image-name> <conductorfile>
-Operation: This function will download and create an image according to a given Conductorfile (similar to Dockerfile) – the root directory structure of a system and all its sub-directories in a local directory, using the debootstrap command. The Conductorfile only support FROM instruction (by default) and can contain one of the following:
+**Usage:** ./conductor.sh build <image-name> <conductorfile>
 
+**Operation:** This function will download and create an image according to a given Conductorfile (similar to Dockerfile) – the root directory structure of a system and all its sub-directories in a local directory, using the debootstrap command. The Conductorfile only support FROM instruction (by default) and can contain one of the following:
+```
 FROM debian:bookworm
 FROM ubuntu:jammy
 FROM ubuntu:focal
-
+```
 
 If no name for the <conductorfile> is given then it will consider the “Conductorfile” named file as its input.
 
 
-Note: debootstrapping takes up lots of time. That's why the build file system for debootstrap happens in .cache/base directory and images just copy the base to ./images/<image-name> directory.
+**Note:** debootstrapping takes up lots of time. That's why the build file system for debootstrap happens in .cache/base directory and images just copy the base to ./images/<image-name> directory.
 
-images
+### images
 
-Usage: ./conductor.sh images
-Operation: This function will list all container images available in the configured images directory.
+**Usage:** ./conductor.sh images
+**Operation:** This function will list all container images available in the configured images directory.
 
-rmi
+### rmi
 
-Usage: ./conductor.sh rmi <image-name>
-Operation: This function will delete the given image from the configured images directory.
+**Usage:** ./conductor.sh rmi <image-name>
+**Operation:** This function will delete the given image from the configured images directory.
 
-rmcache
+### rmcache
 
-Usage: ./conductor.sh rmcache
-Operation: This function will delete all cache including base images.
+**Usage:** ./conductor.sh rmcache
+**Operation:** This function will delete all cache including base images.
 (Proceed with caution)
 
-run [this functionality needs implementation]
+### run [this functionality needs implementation]
 
-Usage: ./conductor.sh <image-name> <container-name> --[command <args>]
-Operation: This function will start a new container with the name as container-name from the specified image. command <args> is the program and its arguments (if any) that will be executed within the container as the first process. If no command is given, it will execute /bin/bash by default. The container will have isolated UTS, PID, NET, MOUNT and IPC namespaces. It will also mount the following file systems within the container:
+**Usage:** ./conductor.sh <image-name> <container-name> --[command <args>]
+**Operation:** This function will start a new container with the name as container-name from the specified image. command <args> is the program and its arguments (if any) that will be executed within the container as the first process. If no command is given, it will execute /bin/bash by default. The container will have isolated UTS, PID, NET, MOUNT and IPC namespaces. It will also mount the following file systems within the container:
 
     procfs for tools dependent on it like ps, top etc. to work correctly
     sysfs to be able to setup ip forwarding using iproute2 tool
@@ -206,34 +204,34 @@ Operation: This function will start a new container with the name as container-n
 
 The first process will have pid = 1 in the container. It will also set correct file permission on the container-rootfs/ so that tools like apt work correctly. A directory named container-name within the configured CONTAINERDIR directory will be created. Furthermore container-name will have a subdirectory named rootfs which will be mounted as root directory for the container.
 
-Note: If you run a container and exit from it, you cannot run the same container again. First you will need to delete the container using stop command, then run it.
+**Note:** If you run a container and exit from it, you cannot run the same container again. First you will need to delete the container using stop command, then run it.
 
-ps
+### ps
 
-Usage: ./conductor.sh ps
-Operation: This function will show all running containers by querying entries within the configured CONTAINERDIR directory.
+**Usage:** ./conductor.sh ps
+**Operation:** This function will show all running containers by querying entries within the configured CONTAINERDIR directory.
 
-stop
+### stop
 
-Usage: ./conductor.sh stop <container-name>
-Operation: This function will stop a running container with a given name. Stopping a container involves:
+**Usage:** ./conductor.sh stop <container-name>
+**Operation:** This function will stop a running container with a given name. Stopping a container involves:
 
     Killing the unshare process that started the container
     Killing all processes running within the container
     Unmounting any remaining mount point within the container rootfs.
     Deleting container-name with configured CONTAINERDIR directory.
 
-Note: Stopping a container will delete all state of the container
+**Note:** Stopping a container will delete all state of the container
 
 exec [this functionality needs implementation]
 
-Usage: ./conductor.sh exec <container-name> –-[command <args>]
-Operation: This function executes the given program along with its arguments within the specified running container. If no command is provided it will execute /bin/bash by default. The executed program will be in the same UTS, PID, NET, MOUNT and IPC namespace as the specified container. Furthermore it will see the root directory as conatiner-name/rootfs. It will also see the same procfs, sysfs and /dev filesystem as configured within the container and tools like ps, top etc. should work correctly.
+**Usage:** ./conductor.sh exec <container-name> –-[command <args>]
+**Operation:** This function executes the given program along with its arguments within the specified running container. If no command is provided it will execute /bin/bash by default. The executed program will be in the same UTS, PID, NET, MOUNT and IPC namespace as the specified container. Furthermore it will see the root directory as conatiner-name/rootfs. It will also see the same procfs, sysfs and /dev filesystem as configured within the container and tools like ps, top etc. should work correctly.
 
 addnetwork [this functionality needs implementation]
 
-Usage: ./conductor.sh addnetwork <container-name> [options]
-Operation: This function will add a network interface to a container and setup its configurations so that the container can communicate using the network.
+**Usage:** ./conductor.sh addnetwork <container-name> [options]
+**Operation:** This function will add a network interface to a container and setup its configurations so that the container can communicate using the network.
 
 By default if no options is given it will setup the container network as shown in the diagram below:
 
@@ -285,8 +283,8 @@ You can use the --expose or -e option to make a port available to services outsi
 
 peer
 
-Usage: ./conductor.sh peer <container1-name> <container2-name>
-Operation: By default our conductor isolates the container so that no inter-container communication is possible. This function allows two containers to communicate with each other.
+**Usage:** ./conductor.sh peer <container1-name> <container2-name>
+**Operation:** By default our conductor isolates the container so that no inter-container communication is possible. This function allows two containers to communicate with each other.
 
 The skeleton code implements most of the functionalities of the tool. For Task 3 you need to do the following:
 
@@ -506,7 +504,7 @@ In this subtask, you need to do the following steps:
     Modify all the mount and container interaction operations in the tool to use the new overlay merged file directory instead of previously used rootfs.
     When the container stops, the overlay file system should also be unmounted.
 
-Note: When a container is running, only one overlayfs should be mounted. 
+**Note:** When a container is running, only one overlayfs should be mounted. 
 
 Subtask 3.e: Implement COPY instruction for Conductorfile
 
@@ -566,7 +564,7 @@ Tip: To keep the container running in background use a first program that will n
     Get IP address of cs-cont. You should use script to get the IP address – can use ip interface configuration within the host to get IP address of cs-cont or can exec any command within cs-cont to get it's IP address
     Within cs-cont launch the counter service using exec cs-cont -- [path to counter-service directory within cs-cont]/counter-service 8080 1
     Within es-cont launch the external service using exec es-cont -- python3 [path to external-service directory within es-cont]/app.py "http://<ipaddr_cs-cont>:8080/"
-    Within the host system open/curl the url: http://<host-ip>:3000 to verify output of the service. Note: http://localhost:3000 from within the host will not work.
+    Within the host system open/curl the url: http://<host-ip>:3000 to verify output of the service. **Note:** http://localhost:3000 from within the host will not work.
     On any system which can ping the host system open/curl the url: http://<host-ip>:3000 to verify output of the service
 
 Frequently Asked Questions

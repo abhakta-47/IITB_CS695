@@ -321,7 +321,8 @@ run() {
 
     # Subtask 3.a.1
     # You should bind mount /dev within the container root fs
-
+    local ROOTFS_PATH="$CONTAINERDIR/$NAME/rootfs"
+    mount --bind /dev "$ROOTFS_PATH/dev" 
     # Subtask 3.d.3
     # Modify subtask 3.a.1 to bind mount /dev
 
@@ -333,7 +334,11 @@ run() {
     # - When unshare process exits all of its children also exit (--kill-child option)
     # - permission of root dir within container should be set to 755 for apt to work correctly
     # - $INIT_CMD_ARGS should be the entry program for the container
-
+    unshare --uts --pid --net --mount --ipc --fork --kill-child chroot "$ROOTFS_PATH" /bin/sh -c "
+        mount -t proc proc /proc
+        mount -t sysfs sys /sys
+        exec $INIT_CMD_ARGS
+    "
     # Subtask 3.d.3
     # Modify subtask 3.a.2 to use the overlay filesystem
 
