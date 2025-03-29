@@ -1,25 +1,20 @@
 #define _GNU_SOURCE
+#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <sys/utsname.h>
-#include <sched.h>
 #include <sys/syscall.h>
+#include <sys/utsname.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
-#define errExit(msg)        \
-    do                      \
-    {                       \
-        perror(msg);        \
-        exit(EXIT_FAILURE); \
+#define errExit(msg)                                                           \
+    do {                                                                       \
+        perror(msg);                                                           \
+        exit(EXIT_FAILURE);                                                    \
     } while (0)
 
-
 #define CHILD_STACK_SIZE 0x800000
-
-
 
 int child_function(void *arg) {
 
@@ -39,14 +34,12 @@ int child_function(void *arg) {
     write(pipefd[1], "1", 1);
     close(pipefd[1]);
 
-    while (1)
-    {
+    while (1) {
         sleep(1);
     }
-    
+
     return 0;
 }
-
 
 int child2_function() {
 
@@ -58,8 +51,6 @@ int child2_function() {
     return 0;
 }
 
-
-
 int main() {
 
     char hostname_buf[32];
@@ -70,7 +61,7 @@ int main() {
     int pipefd[2];
 
     pid_t child_pid;
-    
+
     if (pipe(pipefd) == -1) {
         errExit("pipe");
     }
@@ -89,18 +80,14 @@ int main() {
     /**
      * 1. Create a new child process that runs child1_function
      * 2. The child process will have its own UTS and PID namespace
-     * 3. You should pass the pointer to the pipefd array as an argument to the child1_function
+     * 3. You should pass the pointer to the pipefd array as an argument to the
+     * child1_function
      * 4. PID of child1 should be assigned to child_pid variable
-    */
+     */
 
-   // ------------------ WRITE CODE HERE ------------------
+    // ------------------ WRITE CODE HERE ------------------
 
-
-
-
-
-
-   // -----------------------------------------------------
+    // -----------------------------------------------------
 
     close(pipefd[1]);
     read(pipefd[0], buf, 1);
@@ -108,34 +95,29 @@ int main() {
 
     /**
      * You can write any code here as per your requirement
-     * Note: PID namespace of a process will only change the PID namespace of its subsequent children, not the process itself.
-     * You are allowed to make modifications to the parent process such that PID namespace of child2 is same as that of child1
-    */
+     * Note: PID namespace of a process will only change the PID namespace of
+     * its subsequent children, not the process itself. You are allowed to make
+     * modifications to the parent process such that PID namespace of child2 is
+     * same as that of child1
+     */
 
     // ------------------ WRITE CODE HERE ------------------
 
-
-
-
     // -----------------------------------------------------
-
 
     printf("----------------------------------------\n");
     printf("Parent Process PID: %d\n", getpid());
     gethostname(hostname_buf, 32);
     printf("Parent Hostname: %s\n", hostname_buf);
     printf("----------------------------------------\n");
-    
 
     if (fork() == 0) {
 
         /**
          * 1. Join the existing UTS namespace and PID namespace
-        */
+         */
 
         // ------------------ WRITE CODE HERE ------------------
-
-
 
         // -----------------------------------------------------
 
@@ -152,8 +134,6 @@ int main() {
     gethostname(hostname_buf, 32);
     printf("Parent Hostname: %s\n", hostname_buf);
     printf("----------------------------------------\n");
-    
-    
 
     free(child_stack);
     return 0;
