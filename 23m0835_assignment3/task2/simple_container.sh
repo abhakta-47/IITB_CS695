@@ -26,7 +26,7 @@ echo -e "\n\e[1;32mOutput Subtask 2b\e[0m"
 ## Subtask 2: Execute in a new root filesystem with new PID and UTS namespace
 # The pid of container_prog process should be 1
 # You should pass "subtask2" as an argument to container_prog
-
+sudo unshare --fork --pid --uts --mount-proc chroot $SIMPLE_CONTAINER_ROOT /container_prog subtask2
 
 
 echo -e "\nHostname in the host: $(hostname)"
