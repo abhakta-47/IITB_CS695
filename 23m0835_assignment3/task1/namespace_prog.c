@@ -86,7 +86,11 @@ int main() {
      */
 
     // ------------------ WRITE CODE HERE ------------------
-
+    child_pid = clone(child_function, child_stack + CHILD_STACK_SIZE,
+                      CLONE_NEWPID | CLONE_NEWUTS | SIGCHLD, (void *)pipefd);
+    if (child_pid == -1) {
+        errExit("clone");
+    }
     // -----------------------------------------------------
 
     close(pipefd[1]);
@@ -102,7 +106,13 @@ int main() {
      */
 
     // ------------------ WRITE CODE HERE ------------------
-
+    int child1_pidfd = syscall(SYS_pidfd_open, child_pid, 0);
+    if (child1_pidfd == -1) {
+        errExit("pidfd_open");
+    }
+    if (setns(child1_pidfd, CLONE_NEWPID) == -1) {
+        errExit("setns");
+    }
     // -----------------------------------------------------
 
     printf("----------------------------------------\n");
@@ -118,13 +128,19 @@ int main() {
          */
 
         // ------------------ WRITE CODE HERE ------------------
-
+        if (setns(child1_pidfd, CLONE_NEWPID) == -1) {
+            errExit("setns");
+        }
+        if (setns(child1_pidfd, CLONE_NEWUTS) == -1) {
+            errExit("setns");
+        }
         // -----------------------------------------------------
 
         child2_function();
         exit(0);
     }
 
+    close(child1_pidfd);
     wait(NULL);
     kill(child_pid, SIGKILL);
     wait(NULL);
