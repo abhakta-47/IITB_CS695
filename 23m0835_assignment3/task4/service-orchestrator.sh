@@ -3,11 +3,11 @@
 # Complete this script to deploy external-service and counter-service in two separate containers
 # You will be using the conductor tool that you completed in task 3.
 
-source setup.sh
-
 # Creating link to the tool within this directory
 ln -s ../task3/conductor.sh conductor.sh
 ln -s ../task3/setup.sh setup.sh
+
+source setup.sh
 
 # Function to clean up background processes on exit
 cleanup() {
@@ -54,6 +54,13 @@ echo -e "\e[32mNetwork configured for cs-con\e[0m"
 echo -e "\e[34mSetting up peer network between cs-con and es-con\e[0m"
 ./conductor.sh peer cs-con es-con
 echo -e "\e[32mPeer network setup complete\e[0m"
+
+sleep 0.5
+for i in {5..1}; do
+    echo -ne "\e[33mWaiting for networks to be up .... $i\e[0m\r"
+    sleep 1
+done
+echo -ne "\e[0m\r"
 
 # 5. Get IP address of cs-con
 echo -e "\e[34mFetching IP address of cs-con\e[0m"

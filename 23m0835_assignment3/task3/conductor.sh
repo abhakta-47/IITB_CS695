@@ -130,7 +130,6 @@ handle_run() {
 
     # Subtask 3.f.3
     # Execute the command in the new mount
-    # TODO
     # mount -o rbind /dev "$layer_mnt_dir/dev"
     unshare --uts --pid --mount --ipc --fork --kill-child chroot "$layer_mnt_dir" /bin/sh -c "
         mount -t proc proc /proc
@@ -140,7 +139,6 @@ handle_run() {
 
     # Subtask 3.f.4
     # Cleanup and record metadata
-    # TODO
     # umount -Rlf "$layer_mnt_dir/dev"
     umount "$layer_mnt_dir"
     rmdir "$layer_mnt_dir"
@@ -363,7 +361,6 @@ run() {
     mount -o rbind /dev "$ROOTFS_PATH/dev"
     # Subtask 3.d.3
     # Modify subtask 3.a.1 to bind mount /dev
-    # TODO ??
     # Subtask 3.a.2
     # - Use unshare to run the container in a new [uts, pid, net, mount, ipc] namespaces
     # - You should change the root to the rootfs that has been created for the container
@@ -372,14 +369,13 @@ run() {
     # - When unshare process exits all of its children also exit (--kill-child option)
     # - permission of root dir within container should be set to 755 for apt to work correctly
     # - $INIT_CMD_ARGS should be the entry program for the container
-    unshare --uts --pid --net --mount --ipc --fork --kill-child chroot "$ROOTFS_PATH" /bin/sh -c "
+    unshare --uts --pid --net --mount --ipc --fork --kill-child chroot "$(realpath $ROOTFS_PATH)" /bin/sh -c "
         mount -t proc proc /proc
         mount -t sysfs sys /sys
         exec $INIT_CMD_ARGS
     "
     # Subtask 3.d.3
     # Modify subtask 3.a.2 to use the overlay filesystem
-    # TODO ??
 }
 
 # This will show containers that are currently running
@@ -411,8 +407,7 @@ stop() {
     # Subtask 3.d.3
     # Modify the below code to use the overlay filesystem
     # Lesson: Getting the pid of the entry process within the container
-    local PID=$(ps -ef | grep "$CONTAINERDIR/$NAME/rootfs" | grep -v grep | awk '{print $2}')
-    # TODO ??
+    local PID=$(ps -ef | grep "$CONTAINERDIR/$NAME/rootfs" | grep unshare | grep -v grep | awk '{print $2}')
     
 
     # Lesson: Delete the ip link created in host for the container
@@ -463,9 +458,8 @@ exec() {
     # Subtask 3.d.3
     # Modify the below code to use the overlay filesystem
     # This is the PID of the unshare process for the given container
-    local UNSHARE_PID=$(ps -ef | grep "$CONTAINERDIR/$NAME/rootfs" | grep -v grep | awk '{print $2}')
+    local UNSHARE_PID=$(ps -ef | grep "$CONTAINERDIR/$NAME/rootfs" | grep unshare | grep -v grep | awk '{print $2}')
     [ -z "$UNSHARE_PID" ] && die "Cannot find container process"
-    # TODO ??
 
     # This is the PID of the process that unshare executed within the container
     local CONTAINER_INIT_PID=$(pgrep -P $UNSHARE_PID | head -1)
@@ -511,8 +505,7 @@ addnetwork() {
 
     # Subtask 3.d.3
     # Modify the below code to use the overlay filesystem (Use only one pid)
-    local PID=$(ps -ef | grep "$CONTAINERDIR/$NAME/rootfs" | grep -v grep | awk '{print $2}')
-    # TODO ??
+    local PID=$(ps -ef | grep "$CONTAINERDIR/$NAME/rootfs" | grep unshare | grep -v grep | awk '{print $2}')
 
     local CONDUCTORNS="/proc/$PID/ns/net"
     local NSDIR=$NETNSDIR/$NAME
