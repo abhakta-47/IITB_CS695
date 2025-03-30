@@ -73,7 +73,7 @@ process_instruction() {
 }
 
 get_layer_hash() {
-    echo "$1" | awk -F: '{print $NF}' | awk -F/ '{print $NF}'
+    echo "$1" | awk -F: '{print $1}' | awk -F/ '{print ($NF == "diff") ? $(NF-1) : $NF}'
 }
 
 update_layer_stack() {
@@ -83,8 +83,12 @@ update_layer_stack() {
     if [ -z "$layer_stack" ]; then
         echo "$current_layer"
     else
-        echo "$layer_stack:$current_layer"
+        echo "$current_layer:$layer_stack"
     fi
+}
+
+get_abs_paths(){
+    echo "$1" | awk -v pre="$(pwd)/" 'BEGIN { FS=OFS=":" } { for (i=1; i<=NF; i++) $i = pre $i; print }'
 }
 
 ############## utility function end
@@ -112,19 +116,38 @@ handle_run() {
     
     # Subtask 3.f.1
     # Create new layer
-    
+    local layer_diff_dir="$(pwd)/$CACHEDIR/layers/$layer_hash/diff"
+    local layer_work_dir="$(pwd)/$CACHEDIR/layers/$layer_hash/work"
+    local layer_mnt_dir="$(pwd)/$CACHEDIR/layers/$layer_hash/mnt"
+    mkdir -p "$layer_diff_dir"
+    mkdir -p "$layer_work_dir"
+    mkdir -p "$layer_mnt_dir"
 
     # Subtask 3.f.2
     # Temporarily mount the overlay filesystem
-    
+    parent_layer_paths="$(get_abs_paths "$parent_layers")"
+    mount -t overlay overlay -o lowerdir="$parent_layer_paths",upperdir="$layer_diff_dir",workdir="$layer_work_dir" "$layer_mnt_dir"
 
     # Subtask 3.f.3
     # Execute the command in the new mount
+    # TODO
+    # mount -o rbind /dev "$layer_mnt_dir/dev"
+    unshare --uts --pid --mount --ipc --fork --kill-child chroot "$layer_mnt_dir" /bin/sh -c "
+        mount -t proc proc /proc
+        mount -t sysfs sys /sys
+        $command 2>&1 | tee /dev/console
+    "
 
-    
     # Subtask 3.f.4
     # Cleanup and record metadata
-    
+    # TODO
+    # umount -Rlf "$layer_mnt_dir/dev"
+    umount "$layer_mnt_dir"
+    rmdir "$layer_mnt_dir"
+    echo "$command" > "$CACHEDIR/layers/$layer_hash/metadata"
+    echo "$parent_hash" > "$CACHEDIR/layers/$layer_hash/parent"
+    current_layer="$CACHEDIR/layers/$layer_hash/diff"
+    echo "$current_layer" > "$CACHEDIR/layers/.last_layer"
 }
 
 # Subtask 3.e
@@ -155,24 +178,32 @@ handle_copy() {
     
     # Subtask 3.e.1
     # Create a new layer
+    local layer_diff_dir="$(pwd)/$CACHEDIR/layers/$layer_hash/diff"
+    local layer_work_dir="$(pwd)/$CACHEDIR/layers/$layer_hash/work"
+    local layer_mnt_dir="$(pwd)/$CACHEDIR/layers/$layer_hash/mnt"
+    mkdir -p "$layer_diff_dir"
+    mkdir -p "$layer_work_dir"
+    mkdir -p "$layer_mnt_dir"
 
 
     # Subtask 3.e.2
     # Temporarily mount the overlay filesystem
-
+    parent_layer_paths="$(get_abs_paths "$parent_layers")"
+    mount -t overlay overlay -o lowerdir="$parent_layer_paths",upperdir="$layer_diff_dir",workdir="$layer_work_dir" "$layer_mnt_dir"
     
     # Subtask 3.e.3
     # Copy the files from source to destination
-
+    cp -r "$src" "$layer_mnt_dir/$dest"
     
     # Subtask 3.e.4
     # Unmount the overlay filesystem
-
+    umount "$layer_mnt_dir"
+    rmdir "$layer_mnt_dir"
 
     # Record metadata and parent layer
     echo "COPY $src $dest" > "$CACHEDIR/layers/$layer_hash/metadata"
     echo "$parent_hash" > "$CACHEDIR/layers/$layer_hash/parent"
-    current_layer="$CACHEDIR/layers/$layer_hash"
+    current_layer="$CACHEDIR/layers/$layer_hash/diff"
     echo "$current_layer" > "$CACHEDIR/layers/.last_layer"
 }
 
@@ -220,10 +251,10 @@ build() {
     local LAYER_STACK="$BASE_LAYER"
     
     # # For subtask 3.e and 3.f
-    # while IFS= read -r instruction; do
-    #     process_instruction "$instruction" "$LAYER_STACK"
-    #     LAYER_STACK=$(update_layer_stack "$current_layer/diff" "$LAYER_STACK")
-    # done < <(grep -E '^(RUN|COPY)' "$CONDUCTORFILE")
+    while IFS= read -r instruction; do
+        process_instruction "$instruction" "$LAYER_STACK"
+        LAYER_STACK=$(update_layer_stack "$current_layer" "$LAYER_STACK")
+    done < <(grep -E '^(RUN|COPY)' "$CONDUCTORFILE")
     
     mkdir -p "$IMAGEDIR/$NAME"
     echo "$LAYER_STACK" > "$IMAGEDIR/$NAME/layers"
@@ -311,16 +342,8 @@ run() {
     # Subtask 3.d.2 - start
     # Create a new directory for the container rootfs
     # Read the layer stack from the image directory and mount the overlay filesystem
-    local LAYERS_META="$IMAGEDIR/$IMAGE/layers"
-    cat "$LAYERS_META"
-    local LOWER_DIRS=""
-    while IFS= read -r layer; do
-        # Prepend each layer to the stack (as layers are given in reverse order)
-        LOWER_DIRS="$(pwd)/$layer:$LOWER_DIRS"
-    done < "$LAYERS_META"
-    LOWER_DIRS="${LOWER_DIRS%:}"
-
-    echo "$LOWER_DIRS"
+    local LAYERS_LIST="$IMAGEDIR/$IMAGE/layers"
+    local LOWER_DIRS="$(get_abs_paths $(cat "$LAYERS_LIST"))"
     local UPPER_DIR="$(pwd)/$CONTAINERDIR/$NAME/upperdir"
     local WORK_DIR="$(pwd)/$CONTAINERDIR/$NAME/workdir"
     local ROOTFS_PATH="$(pwd)/$CONTAINERDIR/$NAME/rootfs"
@@ -336,7 +359,7 @@ run() {
 
     # Subtask 3.a.1
     # You should bind mount /dev within the container root fs
-    mount --bind /dev "$ROOTFS_PATH/dev" 
+    mount -o rbind /dev "$ROOTFS_PATH/dev"
     # Subtask 3.d.3
     # Modify subtask 3.a.1 to bind mount /dev
     # TODO ??
@@ -351,7 +374,6 @@ run() {
     unshare --uts --pid --net --mount --ipc --fork --kill-child chroot "$ROOTFS_PATH" /bin/sh -c "
         mount -t proc proc /proc
         mount -t sysfs sys /sys
-        mount --bind /dev /dev
         exec $INIT_CMD_ARGS
     "
     # Subtask 3.d.3
@@ -406,7 +428,7 @@ stop() {
     # You can remove any if not required depending on how you mounted them
     umount "$CONTAINERDIR/$NAME/rootfs/proc" > /dev/null 2>&1 || :
     umount "$CONTAINERDIR/$NAME/rootfs/sys" > /dev/null 2>&1 || :
-    umount "$CONTAINERDIR/$NAME/rootfs/dev" > /dev/null 2>&1 || :
+    umount -Rlf "$CONTAINERDIR/$NAME/rootfs/dev" > /dev/null 2>&1 || :
 
 
     # Subtask 3.d.4
