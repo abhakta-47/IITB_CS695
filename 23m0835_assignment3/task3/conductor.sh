@@ -421,7 +421,7 @@ stop() {
     fi
 
     # Lesson: Kill the process and unmount unused points
-    [ -z $PID ] || kill -9 $PID
+    [ -z "$PID" ] || kill -9 $PID
 
     # Subtask 3.d.3
     # Modify the below code to use the overlay filesystem

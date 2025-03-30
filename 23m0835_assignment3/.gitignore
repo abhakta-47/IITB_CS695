@@ -1,7 +1,12 @@
 /task2/container_root/
 /task2/container_prog
 
+.cache/
+.containers/
+.images/
+
 /task4/counter-service/
 /task4/external-service/
-
+/task4/conductor.sh
+/task4/setup.sh
 *.out
