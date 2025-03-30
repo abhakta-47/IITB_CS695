@@ -359,6 +359,7 @@ run() {
 
     # Subtask 3.a.1
     # You should bind mount /dev within the container root fs
+    mount --make-private /dev
     mount -o rbind /dev "$ROOTFS_PATH/dev"
     # Subtask 3.d.3
     # Modify subtask 3.a.1 to bind mount /dev
@@ -428,13 +429,14 @@ stop() {
     # You can remove any if not required depending on how you mounted them
     umount "$CONTAINERDIR/$NAME/rootfs/proc" > /dev/null 2>&1 || :
     umount "$CONTAINERDIR/$NAME/rootfs/sys" > /dev/null 2>&1 || :
-    umount -Rlf "$CONTAINERDIR/$NAME/rootfs/dev" > /dev/null 2>&1 || :
 
 
     # Subtask 3.d.4
     # Unmount the overlay filesystem
-    sudo umount -l "$CONTAINERDIR/$NAME/rootfs/"  # Lazy unmount
-    
+    umount -R "$CONTAINERDIR/$NAME/rootfs/" > /dev/null 2>&1 || :  # Lazy unmount
+    while mountpoint -q "$CONTAINERDIR/$NAME/rootfs/"; do
+        sleep 0.5
+    done
     # Deletes the container file
     rm -rf "$CONTAINERDIR/$NAME"
     [ -z "$(ls -1 "$CONTAINERDIR" 2>/dev/null || true)" ] && rm -f "$EXTRADIR/.HIGHEST_NUM" &&  iptables -P FORWARD DROP && iptables -F FORWARD && iptables -t nat -F
